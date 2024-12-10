@@ -1,0 +1,87 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_IMAGE_NAME = 'nodejs-app'
+        DOCKER_IMAGE_TAG = 'latest'
+        SLACK_WEBHOOK_URL = 'aHR0cHM6Ly9ob29rcy5zbGFjay5jb20vc2VydmljZXMveW91ci93ZWJob29rL3VybA=='
+        KUBE_NAMESPACE = 'default'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                script {
+                    echo "Checking out code from GitHub..."
+                    git url: 'https://github.com/fiza2511/nodejs-app.git', branch: 'main'
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    echo "Installing dependencies in subfolder..."
+                    dir('EmployeeDB') {  
+                        sh 'npm install' 
+                    }
+                }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                script {
+                    echo "Running tests..."
+                    dir('EmployeeDB') { 
+                        sh 'npm test'
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo "Building Docker image..."
+                    sh 'docker build -t nodejs-app:latest .'
+                }
+            }
+        }
+
+        stage('Push Docker Image to Docker Hub') {
+            steps {
+                script {
+                    echo "Pushing Docker image to Docker Hub..."
+                    sh '''
+                        docker login -u fiza25 -p docker@123
+                        docker push nodejs-app:latest
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    echo "Deploying to Kubernetes..."
+                    sh '''
+                        kubectl apply -f deployment.yaml
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                def status = currentBuild.result ?: 'SUCCESS'
+                def message = "Build status: ${status}"
+                sh """
+                    curl -X POST -H 'Content-type: application/json' --data '{"text": "${message}"}' ${aHR0cHM6Ly9ob29rcy5zbGFjay5jb20vc2VydmljZXMveW91ci93ZWJob29rL3VybA==}
+                """
+            }
+        }
+    }
+}
