@@ -1,0 +1,47 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2  
+      - name: Set up Node.js
+        uses: actions/setup-node@v2    
+        with:
+          node-version: '16'
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm test
+
+  build_and_deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps: 
+      - name: Checkout repository 
+        uses: actions/checkout@v2
+      - name: Build Docker image
+        run: | docker build -t fiza25/nodejs-app:latest . echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin docker push your-dockerhub-username/your-app-name:latest
+
+      - name: Deploy to Kubernetes
+        uses: azure/k8s-deploy@v3
+        with: 
+          namespace: default
+          manifests: |
+            ./k8s/deployment.yml 
+            ./k8s/service.yml
+          images: | 
+            fiza25/nodejs-app:latest
+      - name: Notify success 
+        if: success()
+        run: echo "Deployment succeeded!" | curl -X POST -H 'Content-type: application/json' --data '{"text":"Deployment succeeded!"}' ${{ secrets.SLACK_WEBHOOK }}
+      - name: Notify Failure
+        if: failure()
+        run: echo "Deployment failed!" | curl -X POST -H 'Content-type: application/json' --data '{"text":"Deployment failed!"}' ${{ secrets.SLACK_WEBHOOK }}
