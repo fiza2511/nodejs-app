@@ -1,38 +1,37 @@
-Employee Database
-=====================
+# Node.js CI/CD Pipeline
 
-**A sample Employee Database CRUD application with Node.js, Express and MongoDB.**
+## Overview
 
-## Requirements
+This repository contains a Node.js application and a CI/CD pipeline configured with GitHub Actions and also jenkins file  to automate testing, building, and deployment.
 
-* Node
-* Express
-* MongoDB
+## CI/CD Pipeline
 
-## Implementation Instructions
+The CI/CD pipeline performs the following steps:
+1. Runs tests automatically on pull requests.
+2. Builds a Docker image and pushes it to DockerHub.
+3. Deploys the Docker image to a Kubernetes cluster.
+4. Sends notifications for deployment success or failure.
 
-* [A Sample App with Node.js, Express and MongoDB – Part 1](http://blog.ijasoneverett.com/2013/03/a-sample-app-with-node-js-express-and-mongodb-part-1/)
-* [A Sample App with Node.js, Express and MongoDB – Part 2](http://blog.ijasoneverett.com/2013/04/a-sample-app-with-node-js-express-and-mongodb-part-2/)
+## Setup
 
-## How to build docker image
+### Prerequisites
 
-docker build -t ijason/nodejs-sample .
+- Node.js
+- Docker
+- Kubernetes cluster
 
-## How to run the application
+### Steps
 
-### Kubernetes
-```
-kubectl apply -f k8s.yaml
-```
+1. Clone the repository.
+2. created a dockerfile in EmployeeDB directory as it contains package.json.
+3. Set up the GitHub Secrets:
+   - `DOCKER_USERNAME`: fiza25.
+   - `DOCKER_PASSWORD`: docker@123.
+   - `SLACK_WEBHOOK_URL`: aHR0cHM6Ly9ob29rcy5zbGFjay5jb20vc2VydmljZXMveW91ci93ZWJob29rL3VybA==.
+4. Create Kubernetes manifests under the `deployment.yml`& 'service.yml' directory.
+5. Create a GitHub Actions workflow file under `ci/cd-pipeline.yml`.
+6. created a jenkinsfile in root directory
+## Running the Application
 
-### OpenShift
-```
-oc apply -f k8s.yaml
-```
+To run the application locally: http://localhost:3000
 
-## Contact
-
-Jason Everett
-
-- https://github.com/ijason
-- http://twitter.com/ijayson66
